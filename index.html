@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <style>
+        h1 {
+            text-align: center
+        }
+    </style>
+    <title>CDA Street Lights Dashboard</title>
+</head>
+
+<body>
+    <h1>
+        <label>CDA Lights Project</label>
+    </h1>
+    <div id="div_KS">
+        <h2>Khayaban-e-Suhrwardy Circuit:</h2>
+        <h3>
+            <label>Power:</label>
+            <label id="power_KS">fetching data...</label>
+        </h3>
+    </div>
+    <br>
+    <div id="div_ZP">
+        <h2>Zero Point Circuit:</h2>
+        <h3>
+            <label>Power:</label>
+            <label id="power_ZP">fetching data...</label><br>
+            <label>Fault:</label>
+            <label id="fault_ZP">fetching data...</label>
+        </h3>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.13.0/firebase-app.js'
+        import { getDatabase, onChildChanged, ref } from 'https://www.gstatic.com/firebasejs/9.13.0/firebase-database.js'
+        const off_str = "Device Offline";
+        // Initialize Firebase
+        const app = initializeApp({ databaseURL: "https://streetlightscda-default-rtdb.firebaseio.com" });
+        const db = getDatabase(app);
+        let timerZP, timerKS;
+        const runTimerKS = () => {
+            timerKS = window.setTimeout(
+                () => {
+                    document.getElementById("power_KS").innerHTML = off_str;
+                }, 15000);
+        }
+        const runTimerZP = () => {
+            timerZP = window.setTimeout(
+                () => {
+                    document.getElementById("power_ZP").innerHTML = off_str;
+                    document.getElementById("fault_ZP").innerHTML = off_str;
+                }, 15000);
+        }
+        runTimerKS();
+        runTimerZP();
+
+        onChildChanged(ref(db, 'feedback'), (snapshot) => {
+            let payload = snapshot.val();
+            if (payload.id == "KS") {
+                document.getElementById("power_KS").innerHTML = payload.state;
+                clearTimeout(timerKS)
+                runTimerKS()
+            }
+            else if (payload.id == "ZP") {
+                document.getElementById("power_ZP").innerHTML = payload.state;
+                document.getElementById("fault_ZP").innerHTML = payload.fault;
+                clearTimeout(timerZP)
+                runTimerZP()
+            }
+        });
+
+    </script>
+</body>
+
+</html>
